@@ -20,7 +20,7 @@ $ErrorActionPreference = 'Stop'
 $taskName = 'Logifetch'
 
 if ($Remove) {
-    & schtasks.exe /Delete /TN $taskName /F 2>$null | Out-Null
+    Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
     Get-CimInstance Win32_Process -Filter "Name = 'python.exe' OR Name = 'pythonw.exe'" |
         Where-Object { $_.CommandLine -like "*$InstallPath*logifetch_agent.py*" } |
         ForEach-Object { Invoke-CimMethod -InputObject $_ -MethodName Terminate | Out-Null }
@@ -58,10 +58,10 @@ if ($LASTEXITCODE -ne 0) {
     throw 'The copied Logifetch configuration did not validate.'
 }
 
-$taskCommand = '"{0}" "{1}" --config "{2}"' -f $PythonPath, $agentPath, $installedConfig
-& schtasks.exe /Create /TN $taskName /SC ONLOGON /TR $taskCommand /F | Out-Null
-if ($LASTEXITCODE -ne 0) {
-    throw 'Could not create the Logifetch startup task.'
-}
-& schtasks.exe /Run /TN $taskName | Out-Null
+$action = New-ScheduledTaskAction -Execute $PythonPath -Argument ('"{0}" --config "{1}"' -f $agentPath, $installedConfig)
+$trigger = New-ScheduledTaskTrigger -AtLogOn
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+$principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null
+Start-ScheduledTask -TaskName $taskName
 Write-Host "Installed Logifetch for the current user. Edit $installedConfig, then rerun this script to update the agent files."
