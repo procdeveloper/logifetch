@@ -3,15 +3,15 @@
     "temporary": []
   },
   "custom_shortcuts": {
-    "0050": [],
-    "0051": [],
-    "0052": [],
-    "0053": [],
-    "0056": [],
-    "00c3": [],
-    "00c4": [],
-    "00d7": [],
-    "01a0": ["win", "tab"]
+    "left_click": [],
+    "right_click": [],
+    "middle_click": [],
+    "back": [],
+    "forward": [],
+    "gesture": [],
+    "magspeed_mode_shift": [],
+    "thumb_wheel": [],
+    "large_thumb_haptic": ["win", "tab"]
   },
   "settings": {
     "vendor_id": "046D",

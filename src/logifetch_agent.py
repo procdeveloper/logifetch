@@ -58,14 +58,31 @@ KEYS = {
 }
 KEYS.update({f"f{number}": 0x6F + number for number in range(1, 25)})
 
+# Use these names in config.json. Hexadecimal IDs remain accepted so existing
+# configs and low-level reverse-engineering notes do not break.
+BUTTONS = {
+    "left_click": 0x0050,
+    "right_click": 0x0051,
+    "middle_click": 0x0052,
+    "back": 0x0053,
+    "forward": 0x0056,
+    "gesture": 0x00C3,
+    "magspeed_mode_shift": 0x00C4,
+    "thumb_wheel": 0x00D7,
+    "large_thumb_haptic": 0x01A0,
+}
+
 
 def control_id(value):
     if isinstance(value, int):
         parsed = value
     elif isinstance(value, str):
-        parsed = int(value.removeprefix("0x"), 16)
+        normalized = value.strip().casefold()
+        parsed = BUTTONS.get(normalized)
+        if parsed is None:
+            parsed = int(normalized.removeprefix("0x"), 16)
     else:
-        raise ValueError("control IDs must be hexadecimal strings")
+        raise ValueError("controls must be button names or hexadecimal IDs")
     if not 0 <= parsed <= 0xFFFF:
         raise ValueError("control IDs must fit in 16 bits")
     return parsed
