@@ -84,7 +84,7 @@ The agent can poll selected Windows Event Log rules and use a matching event as 
 
 ## Reverse-engineering material
 
-The HID and Bluetooth LE GATT exploration tools, raw input watcher, and capture notes are in [`reverse/`](reverse/). They are useful for investigating controls and reports, rather than required for ordinary mapper use.
+The HID and Bluetooth LE GATT exploration tools, raw input watcher, and capture notes are in [`reverse/`](reverse/). They are useful for adding more devices to the scripts, investigating controls and reports, rather than required for ordinary mapper use.
 
 ## Status and safety
 
