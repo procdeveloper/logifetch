@@ -1,0 +1,35 @@
+{
+  "remapping": {
+    "temporary": []
+  },
+  "custom_shortcuts": {
+    "01a0": ["win", "tab"]
+  },
+  "settings": {
+    "vendor_id": "046D",
+    "product_id": "B042",
+    "reconnect_delay_seconds": 3,
+    "log_level": "INFO",
+    "log_file": "%LOCALAPPDATA%\\Logifetch\\logifetch.log"
+  },
+  "haptics": {
+    "enabled": false,
+    "pulse_hidpp_body_hex": "",
+    "events": {
+      "agent_started": false,
+      "mouse_connected": false,
+      "notification_alert": false
+    },
+    "notification_alert": {
+      "enabled": false,
+      "poll_seconds": 10,
+      "rules": [
+        {
+          "channel": "System",
+          "providers": ["Microsoft-Windows-Power-Troubleshooter"],
+          "event_ids": [1]
+        }
+      ]
+    }
+  }
+}

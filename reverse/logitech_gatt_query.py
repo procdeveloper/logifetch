@@ -53,6 +53,40 @@ def send_request(handle, characteristic, body):
         raise OSError(f"BluetoothGATTSetCharacteristicValue failed: 0x{hr:08X}")
 
 
+def send_vendor_request(body):
+    """Send one HID++ body through the verified Logitech BLE GATT route."""
+    path = find_vendor_service()
+    handle = gatt.kernel32.CreateFileW(
+        path, gatt.GENERIC_READ | GENERIC_WRITE,
+        gatt.FILE_SHARE_READ | gatt.FILE_SHARE_WRITE, None, gatt.OPEN_EXISTING, 0, None,
+    )
+    if handle == gatt.INVALID_HANDLE_VALUE:
+        raise ct.WinError(ct.get_last_error(), "opening Logitech vendor GATT service")
+    try:
+        characteristic = next(
+            item for item in gatt.get_characteristics(handle)
+            if gatt.uuid_text(item.CharacteristicUuid) == VENDOR_CHARACTERISTIC
+        )
+        send_request(handle, characteristic, body)
+    finally:
+        gatt.kernel32.CloseHandle(handle)
+
+
+def set_temporary_remap(source, target):
+    """Temporarily map one compatible control to another native control."""
+    send_vendor_request(bytes((
+        0x0D, 0x3A, source >> 8, source & 0xFF, 0x20, target >> 8, target & 0xFF,
+    )))
+
+
+def set_control_diversion(control, enabled):
+    """Enable or clear temporary HID++ reporting for a custom-shortcut button."""
+    settings = 0x03 if enabled else 0x02
+    send_vendor_request(bytes((
+        0x0D, 0x3A, control >> 8, control & 0xFF, settings, 0x00, 0x00,
+    )))
+
+
 def main():
     if len(sys.argv) == 2 and sys.argv[1].isdigit() and 0 <= int(sys.argv[1]) <= 8:
         index = int(sys.argv[1])
@@ -80,23 +114,9 @@ def main():
         description = f"temporary remap 0x{source:04X} -> 0x{target:04X}"
     else:
         raise SystemExit("Usage: python .\\logitech_gatt_query.py <index 0..8> | --reporting <hex control ID> | --temporary-remap <source> <target>")
-    path = find_vendor_service()
-    handle = gatt.kernel32.CreateFileW(
-        path, gatt.GENERIC_READ | GENERIC_WRITE, gatt.FILE_SHARE_READ | gatt.FILE_SHARE_WRITE,
-        None, gatt.OPEN_EXISTING, 0, None,
-    )
-    if handle == gatt.INVALID_HANDLE_VALUE:
-        raise ct.WinError(ct.get_last_error(), "opening Logitech vendor GATT service")
-    try:
-        characteristic = next(
-            item for item in gatt.get_characteristics(handle)
-            if gatt.uuid_text(item.CharacteristicUuid) == VENDOR_CHARACTERISTIC
-        )
-        send_request(handle, characteristic, body)
-        print(f"Sent HID++ request for {description}.")
-        print("Run logitech_hid_probe.py now to capture the response if it is delivered as vendor HID input.")
-    finally:
-        gatt.kernel32.CloseHandle(handle)
+    send_vendor_request(body)
+    print(f"Sent HID++ request for {description}.")
+    print("Run logitech_hid_probe.py now to capture the response if it is delivered as vendor HID input.")
 
 
 if __name__ == "__main__":

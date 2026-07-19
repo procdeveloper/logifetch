@@ -159,15 +159,13 @@ python .\logitech_gatt_query.py --temporary-remap 0052 00c4
 
 The large thumb/Haptic (`0x01A0`) and gesture (`0x00C3`) buttons can likewise be either remapped to another available native control or diverted to a minimal custom agent for arbitrary shortcuts. Their intended actions still need to be chosen.
 
-### Thumb button -> Windows Task View
+### Runtime agent
 
-`logitech_thumb_win_tab.py` is a manual, visible Python process that temporarily diverts only `0x01A0`, listens for its HID++ press event, and injects `Win+Tab`. It has no installation or autostart behavior. Run it with:
+`../src/logifetch_agent.py` replaces the original one-button proof of concept. It reapplies configured temporary remaps and button diversions after Bluetooth reconnects, then injects the configured Windows shortcuts. `../Install-Logifetch.ps1` installs it as a per-user logon task.
 
-```powershell
-python .\logitech_thumb_win_tab.py
-```
+### Haptics
 
-Use `Ctrl+C` to stop it; the script clears the temporary diversion on exit.
+The Bluetooth transport path is known, but the HID++ request that triggers a haptic pulse has not yet been captured. See [`HAPTICS-CAPTURE-PLAN.md`](HAPTICS-CAPTURE-PLAN.md) for the evidence-gathering sequence. The runtime configuration intentionally keeps its haptic body empty until that request is confirmed.
 
 ### Drag behaviour
 
