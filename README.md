@@ -23,7 +23,7 @@ powershell -ExecutionPolicy Bypass -File .\Install-Logifetch.ps1 -Remove
 Edit `%LOCALAPPDATA%\Logifetch\config.json` after installing (or edit the repository's [`config.json`](config.json) before the first install). The file has four top-level sections:
 
 - `remapping.temporary` re-applies a temporary native HID++ mapping after each Bluetooth connection. Keep this empty unless you have tested the two control IDs.
-- `custom_shortcuts` maps a diverted control ID to a Windows key combination. The default maps `01a0` (the large thumb / Haptic Sense button) to `Win+Tab`.
+- `custom_shortcuts` maps a diverted control ID to a Windows key combination. Every currently identified control is included as a placeholder; `[]` means the control stays untouched. The default maps `01a0` (the large thumb / Haptic Sense button) to `Win+Tab`.
 - `settings` selects the mouse and reconnect/log behaviour.
 - `haptics` is opt-in. It can react to agent startup, mouse connection, or matching Windows Event Log records rather than using haptic feedback for every button press.
 
@@ -35,6 +35,8 @@ For example, the tested wheel/middle swap can be added to `remapping.temporary`:
   { "source": "0052", "target": "00c4" }
 ]
 ```
+
+The currently listed control IDs are: `0050` left click, `0051` right click, `0052` middle click, `0053` Back, `0056` Forward, `00c3` gesture button, `00c4` MagSpeed mode-shift button, `00d7` thumb wheel, and `01a0` large thumb / Haptic Sense button. Leave an entry as `[]` until you want Logifetch to divert it.
 
 ### Haptic notification alerts
 

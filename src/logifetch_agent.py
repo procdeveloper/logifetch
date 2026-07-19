@@ -90,8 +90,8 @@ def load_config(path):
         raise ValueError("custom_shortcuts must map control IDs to arrays of key names")
     for raw_control, keys in data["custom_shortcuts"].items():
         control_id(raw_control)
-        if not isinstance(keys, list) or not keys:
-            raise ValueError(f"shortcut for {raw_control!r} must be a non-empty array")
+        if not isinstance(keys, list):
+            raise ValueError(f"shortcut for {raw_control!r} must be an array of key names")
         for key in keys:
             virtual_key(key)
     for item in data["remapping"].get("temporary", []):
@@ -183,8 +183,12 @@ class Agent:
     def __init__(self, config):
         self.config = config
         self.events = queue.SimpleQueue()
+        # Empty arrays are deliberate placeholders: only non-empty entries are
+        # diverted from their normal mouse behaviour.
         self.shortcuts = {
-            control_id(raw): keys for raw, keys in config["custom_shortcuts"].items()
+            control_id(raw): keys
+            for raw, keys in config["custom_shortcuts"].items()
+            if keys
         }
         log_file = Path(os.path.expandvars(config["settings"].get(
             "log_file", r"%LOCALAPPDATA%\Logifetch\logifetch.log"
