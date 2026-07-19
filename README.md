@@ -54,6 +54,20 @@ For example, the tested wheel/middle swap can be added to `remapping.temporary`:
 
 The available button names are: `left_click`, `right_click`, `middle_click`, `back`, `forward`, `gesture`, `magspeed_mode_shift`, `thumb_wheel`, and `large_thumb_haptic`. Leave an entry as `[]` until you want Logifetch to divert it. Raw hexadecimal IDs remain supported for compatibility with existing configurations.
 
+### Shortcut keywords
+
+Each non-empty `custom_shortcuts` entry is an ordered JSON array of key names. Modifiers should come first, and Logifetch releases them in reverse order. For example, `"large_thumb_haptic": ["win", "tab"]` sends `Win+Tab`; `"gesture": ["ctrl", "shift", "s"]` sends `Ctrl+Shift+S`.
+
+The accepted keywords are:
+
+- Modifiers: `alt`, `ctrl`, `shift`, `win`
+- Navigation: `up`, `down`, `left`, `right`, `home`, `end`, `page_up`, `page_down`
+- Editing and system keys: `backspace`, `caps_lock`, `delete`, `enter`, `esc`, `space`, `tab`
+- Function keys: `f1` through `f24`
+- Any single letter or number: `a` through `z`, and `0` through `9`
+
+Names are case-insensitive. An unknown keyword makes the configuration validation fail instead of silently sending the wrong shortcut.
+
 ### Haptic notification alerts
 
 The agent can poll selected Windows Event Log rules and use a matching event as a notification alert. The example rule watches for the Windows power-resume event. Enable the relevant event flag and add the verified HID++ pulse body once it has been captured:
