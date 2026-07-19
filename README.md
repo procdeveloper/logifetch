@@ -2,6 +2,22 @@
 
 Configurable, local Windows tools for Logitech mouse controls. The main agent re-applies volatile HID++ remaps after an MX Master 4 reconnects over Bluetooth LE, then turns diverted buttons into Windows shortcuts.
 
+## What it is—and why it exists
+
+Logifetch is a small, open local alternative for the specific controls that Logitech's software does not expose the way we want. It reads the MX Master 4's vendor HID++ reports, reapplies chosen temporary button mappings after a Bluetooth reconnect, and can map selected buttons to ordinary Windows keyboard shortcuts.
+
+The goal is not to replace every part of Logi Options+. It is to keep a few useful device customizations running independently, visibly, and with a plain JSON configuration—without turning every button press into unnecessary haptic feedback. It can instead reserve haptics for meaningful notification alerts once the mouse's pulse command has been captured and verified.
+
+### Supported product and platform
+
+Current support is deliberately narrow:
+
+- **Mouse:** Logitech MX Master 4 (`046D:B042`)
+- **Connection:** Bluetooth Low Energy / Logitech vendor HID++ collection
+- **Operating system:** Windows 10 and Windows 11
+
+Other Logitech models, receiver connections, and macOS/Linux are not supported yet. The hardware identifiers are configurable, but changing them is experimental until their reports and configuration transport have been captured.
+
 ## Install the background agent
 
 Python 3 is the only dependency. From an ordinary, non-administrator PowerShell window:
