@@ -2,7 +2,7 @@
 
 Configurable, local Windows tools for Logitech mouse controls. The main agent re-applies volatile HID++ remaps after an MX Master 4 reconnects over Bluetooth LE, then turns diverted buttons into Windows shortcuts.
 
-## What it is—and why it exists
+## What is it and why it exists
 
 Logifetch is a small, open local alternative for the specific controls that Logitech's software does not expose the way we want. It reads the MX Master 4's vendor HID++ reports, reapplies chosen temporary button mappings after a Bluetooth reconnect, and can map selected buttons to ordinary Windows keyboard shortcuts.
 
