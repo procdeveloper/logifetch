@@ -6,7 +6,7 @@ Configurable, local Windows tools for Logitech mouse controls. The main agent re
 
 Logifetch is a small, open local alternative for the specific controls that Logitech's software does not expose the way we want. It reads the MX Master 4's vendor HID++ reports, reapplies chosen temporary button mappings after a Bluetooth reconnect, and can map selected buttons to ordinary Windows keyboard shortcuts.
 
-The goal is not to replace every part of Logi Options+. It is to keep a few useful device customizations running independently, visibly, and with a plain JSON configuration—without turning every button press into unnecessary haptic feedback. It can instead reserve haptics for meaningful notification alerts once the mouse's pulse command has been captured and verified.
+The goal is not to replace every part of Logi Options+. It is to keep a few useful device customizations running independently, visibly, and with a plain JSON configuration.
 
 ### Supported product and platform
 
