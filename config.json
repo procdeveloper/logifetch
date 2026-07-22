@@ -2,16 +2,15 @@
   "remapping": {
     "temporary": []
   },
-  "custom_shortcuts": {
-    "left_click": [],
-    "right_click": [],
-    "middle_click": [],
-    "back": [],
-    "forward": [],
-    "gesture": [],
-    "magspeed_mode_shift": [],
-    "thumb_wheel": [],
-    "large_thumb_haptic": ["win", "tab"]
+  "custom_actions": {
+    "large_thumb_haptic": {
+      "type": "shortcut",
+      "keys": ["win", "tab"]
+    },
+    "gesture": {
+      "type": "run",
+      "command": "C:\\Program Files\\Everything\\Everything.exe"
+    }
   },
   "settings": {
     "vendor_id": "046D",

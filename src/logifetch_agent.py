@@ -97,20 +97,52 @@ def virtual_key(name):
     raise ValueError(f"unsupported shortcut key: {name!r}")
 
 
+def validate_shortcut(keys, control):
+    if not isinstance(keys, list) or not keys:
+        raise ValueError(f"shortcut for {control!r} must be a non-empty array of key names")
+    for key in keys:
+        virtual_key(key)
+
+
+def validate_action(action, control):
+    if not isinstance(action, dict):
+        raise ValueError(f"action for {control!r} must be an object")
+    action_type = action.get("type")
+    if action_type == "shortcut":
+        validate_shortcut(action.get("keys"), control)
+    elif action_type == "run":
+        if not isinstance(action.get("command"), str) or not action["command"]:
+            raise ValueError(f"run action for {control!r} needs a non-empty command")
+        if not isinstance(action.get("args", []), list):
+            raise ValueError(f"run action arguments for {control!r} must be an array")
+        if not all(isinstance(argument, str) for argument in action.get("args", [])):
+            raise ValueError(f"run action arguments for {control!r} must be strings")
+        if "working_directory" in action and not isinstance(action["working_directory"], str):
+            raise ValueError(f"working_directory for {control!r} must be a string")
+    else:
+        raise ValueError(f"action for {control!r} must have type 'shortcut' or 'run'")
+
+
 def load_config(path):
-    with path.open(encoding="utf-8") as handle:
+    # Accept JSON saved by Notepad/PowerShell as UTF-8 with or without a BOM.
+    with path.open(encoding="utf-8-sig") as handle:
         data = json.load(handle)
-    for section in ("remapping", "custom_shortcuts", "settings", "haptics"):
+    for section in ("remapping", "settings", "haptics"):
         if section not in data:
             raise ValueError(f"configuration is missing the {section!r} section")
-    if not isinstance(data["custom_shortcuts"], dict):
+    legacy_shortcuts = data.get("custom_shortcuts", {})
+    if not isinstance(legacy_shortcuts, dict):
         raise ValueError("custom_shortcuts must map control IDs to arrays of key names")
-    for raw_control, keys in data["custom_shortcuts"].items():
+    for raw_control, keys in legacy_shortcuts.items():
         control_id(raw_control)
-        if not isinstance(keys, list):
-            raise ValueError(f"shortcut for {raw_control!r} must be an array of key names")
-        for key in keys:
-            virtual_key(key)
+        if keys:
+            validate_shortcut(keys, raw_control)
+    actions = data.get("custom_actions", {})
+    if not isinstance(actions, dict):
+        raise ValueError("custom_actions must map control IDs to action objects")
+    for raw_control, action in actions.items():
+        control_id(raw_control)
+        validate_action(action, raw_control)
     for item in data["remapping"].get("temporary", []):
         control_id(item["source"])
         control_id(item["target"])
@@ -134,6 +166,24 @@ def send_shortcut(keys):
         USER32.keybd_event(key, 0, 0, None)
     for key in reversed(virtual_keys):
         USER32.keybd_event(key, 0, KEYEVENTF_KEYUP, None)
+
+
+def run_application(action):
+    """Launch one explicit application without invoking a command shell."""
+    command = action["command"]
+    arguments = action.get("args", [])
+    working_directory = action.get("working_directory")
+    if Path(command).suffix.casefold() == ".lnk" and not arguments and working_directory is None:
+        os.startfile(command)
+    else:
+        subprocess.Popen([command, *arguments], cwd=working_directory)
+
+
+def invoke_action(action):
+    if action["type"] == "shortcut":
+        send_shortcut(action["keys"])
+    else:
+        run_application(action)
 
 
 class EventLogWatcher(threading.Thread):
@@ -200,13 +250,17 @@ class Agent:
     def __init__(self, config):
         self.config = config
         self.events = queue.SimpleQueue()
-        # Empty arrays are deliberate placeholders: only non-empty entries are
-        # diverted from their normal mouse behaviour.
-        self.shortcuts = {
-            control_id(raw): keys
-            for raw, keys in config["custom_shortcuts"].items()
+        # Legacy shortcut arrays remain supported. New action objects override
+        # a legacy shortcut assigned to the same control.
+        self.actions = {
+            control_id(raw): {"type": "shortcut", "keys": keys}
+            for raw, keys in config.get("custom_shortcuts", {}).items()
             if keys
         }
+        self.actions.update({
+            control_id(raw): action
+            for raw, action in config.get("custom_actions", {}).items()
+        })
         log_file = Path(os.path.expandvars(config["settings"].get(
             "log_file", r"%LOCALAPPDATA%\Logifetch\logifetch.log"
         )))
@@ -240,9 +294,9 @@ class Agent:
             source, target = control_id(item["source"]), control_id(item["target"])
             query.set_temporary_remap(source, target)
             self.log.info("Applied temporary remap %04X -> %04X", source, target)
-        for control in self.shortcuts:
+        for control in self.actions:
             query.set_control_diversion(control, True)
-            self.log.info("Enabled custom-shortcut reporting for %04X", control)
+            self.log.info("Enabled custom action reporting for %04X", control)
 
     def find_mouse(self):
         settings = self.config["settings"]
@@ -280,10 +334,13 @@ class Agent:
                 raise ct.WinError(ct.get_last_error(), "reading Logitech HID input")
             now = pressed_controls(bytes(buffer[:received.value]))
             for control in now - held:
-                shortcut = self.shortcuts.get(control)
-                if shortcut:
-                    send_shortcut(shortcut)
-                    self.log.info("Sent shortcut for control %04X", control)
+                action = self.actions.get(control)
+                if action:
+                    try:
+                        invoke_action(action)
+                        self.log.info("Ran %s action for control %04X", action["type"], control)
+                    except Exception as exc:
+                        self.log.warning("Action for control %04X failed: %s", control, exc)
             held = now
 
     def run(self):

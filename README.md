@@ -1,10 +1,10 @@
 # logifetch
 
-Configurable, local Windows tools for Logitech mouse controls. The main agent re-applies volatile HID++ remaps after an MX Master 4 reconnects over Bluetooth LE, then turns diverted buttons into Windows shortcuts.
+Configurable, local Windows tools for Logitech mouse controls. The main agent re-applies volatile HID++ remaps after an MX Master 4 reconnects over Bluetooth LE, then turns diverted buttons into Windows shortcuts or application launches.
 
 ## What is it and why it exists
 
-Logifetch is a small, open local alternative for the specific controls that Logitech's software does not expose the way we want. It reads the MX Master 4's vendor HID++ reports, reapplies chosen temporary button mappings after a Bluetooth reconnect, and can map selected buttons to ordinary Windows keyboard shortcuts.
+Logifetch is a small, open local alternative for the specific controls that Logitech's software does not expose the way we want. It reads the MX Master 4's vendor HID++ reports, reapplies chosen temporary button mappings after a Bluetooth reconnect, and can map selected buttons to ordinary Windows keyboard shortcuts or explicit application launches.
 
 The goal is not to replace every part of Logi Options+. It is to keep a few useful device customizations running independently, visibly, and with a plain JSON configuration.
 
@@ -34,12 +34,14 @@ To remove the agent, its current-user Run entry, and its local configuration:
 powershell -ExecutionPolicy Bypass -File .\Install-Logifetch.ps1 -Remove
 ```
 
+Or double-click [`uninstall.bat`](uninstall.bat). It invokes the same removal path, stops running Logifetch agent processes, removes the current-user startup entry, and deletes `%LOCALAPPDATA%\Logifetch`.
+
 ## Configure it
 
 Edit `%LOCALAPPDATA%\Logifetch\config.json` after installing (or edit the repository's [`config.json`](config.json) before the first install). The file has four top-level sections:
 
 - `remapping.temporary` re-applies a temporary native HID++ mapping after each Bluetooth connection. Keep this empty unless you have tested the two control IDs.
-- `custom_shortcuts` maps a human-readable button name to a Windows key combination. Every currently identified button is included as a placeholder; `[]` means the button stays untouched. The default maps `large_thumb_haptic` to `Win+Tab`.
+- `custom_actions` maps a human-readable button name to either a Windows shortcut or an application launch. The default maps `large_thumb_haptic` to `Win+Tab` and the unused `gesture` button to Everything Search.
 - `settings` selects the mouse and reconnect/log behaviour.
 - `haptics` is opt-in. It can react to agent startup, mouse connection, or matching Windows Event Log records rather than using haptic feedback for every button press.
 
@@ -52,11 +54,18 @@ For example, the tested wheel/middle swap can be added to `remapping.temporary`:
 ]
 ```
 
-The available button names are: `left_click`, `right_click`, `middle_click`, `back`, `forward`, `gesture`, `magspeed_mode_shift`, `thumb_wheel`, and `large_thumb_haptic`. Leave an entry as `[]` until you want Logifetch to divert it. Raw hexadecimal IDs remain supported for compatibility with existing configurations.
+The available button names are: `left_click`, `right_click`, `middle_click`, `back`, `forward`, `gesture`, `magspeed_mode_shift`, `thumb_wheel`, and `large_thumb_haptic`. Raw hexadecimal IDs remain supported for compatibility with existing configurations. Older `custom_shortcuts` configurations remain valid; use `custom_actions` for new bindings.
 
 ### Shortcut keywords
 
-Each non-empty `custom_shortcuts` entry is an ordered JSON array of key names. Modifiers should come first, and Logifetch releases them in reverse order. For example, `"large_thumb_haptic": ["win", "tab"]` sends `Win+Tab`; `"gesture": ["ctrl", "shift", "s"]` sends `Ctrl+Shift+S`.
+A `shortcut` action contains an ordered JSON array of key names. Modifiers should come first, and Logifetch releases them in reverse order. For example:
+
+```json
+"large_thumb_haptic": {
+  "type": "shortcut",
+  "keys": ["win", "tab"]
+}
+```
 
 The accepted keywords are:
 
@@ -67,6 +76,30 @@ The accepted keywords are:
 - Any single letter or number: `a` through `z`, and `0` through `9`
 
 Names are case-insensitive. An unknown keyword makes the configuration validation fail instead of silently sending the wrong shortcut.
+
+### Run an application
+
+A `run` action launches one explicit executable without invoking a command shell. It accepts an optional `args` array and `working_directory`. The default gesture mapping launches the locally installed Everything Search:
+
+```json
+"gesture": {
+  "type": "run",
+  "command": "C:\\Program Files\\Everything\\Everything.exe"
+}
+```
+
+For another app:
+
+```json
+"gesture": {
+  "type": "run",
+  "command": "C:\\Tools\\my-app.exe",
+  "args": ["--open", "inbox"],
+  "working_directory": "C:\\Tools"
+}
+```
+
+For an app exposed only as a Start-menu shortcut, set `command` to its `.lnk` file and omit `args` and `working_directory`.
 
 ### Haptic notification alerts
 
