@@ -26,7 +26,7 @@ Python 3 is the only dependency. From an ordinary, non-administrator PowerShell 
 powershell -ExecutionPolicy Bypass -File .\Install-Logifetch.ps1
 ```
 
-The installer copies the agent and protocol helpers to `%LOCALAPPDATA%\Logifetch`, preserves an existing `config.json`, adds a per-user **Logifetch** entry to the Windows Run key so it starts at logon, and starts it once immediately. It works on Windows 10 and Windows 11 without administrator rights.
+The installer copies the agent and protocol helpers to `%LOCALAPPDATA%\Logifetch`, preserves an existing `config.json`, registers a per-user **Logifetch** Scheduled Task that starts at logon, restarts it after a crash, and starts it once immediately. It works on Windows 10 and Windows 11 without administrator rights. This is intentionally an interactive logon task, not a Windows service: only an interactive process can send the mouse and keyboard actions to your desktop.
 
 To remove the agent, its current-user Run entry, and its local configuration:
 
@@ -34,7 +34,7 @@ To remove the agent, its current-user Run entry, and its local configuration:
 powershell -ExecutionPolicy Bypass -File .\Install-Logifetch.ps1 -Remove
 ```
 
-Or double-click [`uninstall.bat`](uninstall.bat). It invokes the same removal path, stops running Logifetch agent processes, removes the current-user startup entry, and deletes `%LOCALAPPDATA%\Logifetch`.
+Or double-click [`uninstall.bat`](uninstall.bat). It invokes the same removal path, stops running Logifetch agent processes, removes its Scheduled Task, and deletes `%LOCALAPPDATA%\Logifetch`.
 
 ## Configure it
 

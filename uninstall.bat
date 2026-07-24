@@ -12,5 +12,5 @@ if not "%exitcode%"=="0" (
 )
 
 echo.
-echo Logifetch startup entry and running agent processes were removed.
+echo Logifetch Scheduled Task and running agent processes were removed.
 pause

@@ -12,5 +12,5 @@ if not "%exitcode%"=="0" (
 )
 
 echo.
-echo Logifetch installation completed.
+echo Logifetch installation completed. It will start at logon and restart after a crash.
 pause
